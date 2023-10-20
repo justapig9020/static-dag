@@ -13,3 +13,4 @@ struct SNode {
 #define as_node(self) ((struct DAGNode *)(&self->node))
 struct VNode *new_vnode(int data, ...);
 struct SNode *new_snode(char *name, ...);
+void print_dag();

@@ -22,7 +22,7 @@
     } while (0)
 
 #define for_each_child(self, child)                                            \
-    for (struct DAGNode *child = self->children; child;                        \
+    for (struct DAGNode *child = (self)->children; child;                      \
          child = next_child(self, child))
 
 struct DAGNode {
@@ -35,14 +35,16 @@ struct DAGNode {
 };
 
 struct DAGop {
-    void (*print)(struct DAGNode *node);
+    void (*free)(struct DAGNode *self);
+    void (*print)(struct DAGNode *self);
 };
 
-void init_node(struct DAGNode *node, unsigned int ancestor_amount,
+bool init_node(struct DAGNode *self, unsigned int ancestor_amount,
                struct DAGop *op, va_list *ancestors);
-
-void print_dag(struct DAGNode *root);
+bool remove_node(struct DAGNode *self);
 
 bool has_ancestor(struct DAGNode *self);
 bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child);
+unsigned int ancestor_count(struct DAGNode *self);
 struct DAGNode *next_child(struct DAGNode *self, struct DAGNode *current_child);
+void print_node(struct DAGNode *self);

@@ -9,11 +9,19 @@
 #define VNODE_AMOUNT 10
 #define SNODE_AMOUNT 10
 
-static struct VNode vnode_pool[VNODE_AMOUNT];
-static struct SNode snode_pool[SNODE_AMOUNT];
+#include <stdbool.h>
 
-static int vnode_pool_index = 0;
-static int snode_pool_index = 0;
+struct VNodeChunk {
+    struct VNode node;
+    bool allocated;
+};
+
+struct SNodeChunk {
+    struct SNode node;
+    bool allocated;
+};
+static struct VNodeChunk vnode_pool[VNODE_AMOUNT];
+static struct SNodeChunk snode_pool[SNODE_AMOUNT];
 
 static struct DAGop vnode_op;
 static struct DAGop snode_op;
@@ -29,27 +37,74 @@ static void vnode_print(struct DAGNode *n) {
 }
 
 struct VNode *new_vnode(int data, ...) {
-    if (vnode_pool_index >= VNODE_AMOUNT) {
-        return NULL;
-    }
-    struct VNode *vnode = &vnode_pool[vnode_pool_index];
-    vnode_pool_index += 1;
-    vnode->data = data;
+    int i;
+    for (i = 0; i < VNODE_AMOUNT; i++) {
+        if (!vnode_pool[i].allocated) {
+            struct VNode *vnode = &vnode_pool[i].node;
+            vnode_pool[i].allocated = true;
+            vnode->data = data;
 
-    DAGNodeInit(vnode->node, &vnode_op, data);
-    return vnode;
+            DAGNodeInit(vnode->node, &vnode_op, data);
+            return vnode;
+        }
+    }
+    return NULL;
 }
 
 struct SNode *new_snode(char *name, ...) {
-    if (snode_pool_index >= SNODE_AMOUNT) {
-        return NULL;
+    int i;
+    for (i = 0; i < SNODE_AMOUNT; i++) {
+        if (!snode_pool[i].allocated) {
+            struct SNode *snode = &snode_pool[i].node;
+            snode_pool[i].allocated = true;
+            snode->name = name;
+
+            DAGNodeInit(snode->node, &snode_op, name);
+            return snode;
+        }
     }
-    struct SNode *snode = &snode_pool[snode_pool_index];
-    snode_pool_index += 1;
-    snode->name = name;
-    DAGNodeInit(snode->node, &snode_op, name);
-    return snode;
+    return NULL;
 }
 
-static struct DAGop vnode_op = {.print = vnode_print};
-static struct DAGop snode_op = {.print = snode_print};
+void free_vnode(struct DAGNode *n) {
+    struct VNode *vnode = container_of(n, struct VNode, node);
+    struct VNodeChunk *chunk = container_of(vnode, struct VNodeChunk, node);
+    chunk->allocated = false;
+}
+
+void free_snode(struct DAGNode *n) {
+    struct SNode *snode = container_of(n, struct SNode, node);
+    struct SNodeChunk *chunk = container_of(snode, struct SNodeChunk, node);
+    chunk->allocated = false;
+}
+
+static struct DAGop vnode_op = {.free = free_vnode, .print = vnode_print};
+static struct DAGop snode_op = {.free = free_snode, .print = snode_print};
+
+static void print_vnode(struct VNode *vnode) {
+    struct DAGNode *node = &vnode->node;
+    debug("%p[\"%d: %d\"];\n", node, vnode->data, ancestor_count(node));
+    for_each_child(node, child) { debug("%p --> %p;\n", node, child); }
+}
+
+static void print_snode(struct SNode *snode) {
+    struct DAGNode *node = &snode->node;
+    debug("%p[\"%s: %d\"];\n", node, snode->name, ancestor_count(node));
+    for_each_child(node, child) { debug("%p --> %p;\n", node, child); }
+}
+
+void print_dag() {
+    debug("```mermaid\n");
+    debug("flowchart LR;\n");
+    for (int i = 0; i < VNODE_AMOUNT; i++) {
+        if (vnode_pool[i].allocated) {
+            print_vnode(&vnode_pool[i].node);
+        }
+    }
+    for (int i = 0; i < SNODE_AMOUNT; i++) {
+        if (snode_pool[i].allocated) {
+            print_snode(&snode_pool[i].node);
+        }
+    }
+    debug("```\n");
+}
