@@ -1,4 +1,5 @@
 #include "custom_dags.h"
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -27,25 +28,26 @@ static void vnode_print(struct DAGNode *n) {
     debug("%p[\"%d\"];\n", n, vnode->data);
 }
 
-struct VNode *new_vnode(int data) {
+struct VNode *new_vnode(int data, ...) {
     if (vnode_pool_index >= VNODE_AMOUNT) {
         return NULL;
     }
     struct VNode *vnode = &vnode_pool[vnode_pool_index];
     vnode_pool_index += 1;
     vnode->data = data;
-    DAGNodeInit(vnode->node, &vnode_op);
+
+    DAGNodeInit(vnode->node, &vnode_op, data);
     return vnode;
 }
 
-struct SNode *new_snode(char *name) {
+struct SNode *new_snode(char *name, ...) {
     if (snode_pool_index >= SNODE_AMOUNT) {
         return NULL;
     }
     struct SNode *snode = &snode_pool[snode_pool_index];
     snode_pool_index += 1;
     snode->name = name;
-    DAGNodeInit(snode->node, &snode_op);
+    DAGNodeInit(snode->node, &snode_op, name);
     return snode;
 }
 

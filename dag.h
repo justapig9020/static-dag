@@ -1,4 +1,5 @@
 #pragma once
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>
@@ -10,9 +11,14 @@
     struct DAGNode name;                                                       \
     struct DAGNode *name##_ancestor[ancestor_count];
 
-#define DAGNodeInit(name, op)                                                  \
-    init_node(&(name), sizeof(name##_ancestor) / sizeof(name##_ancestor[0]),   \
-              (op));
+#define DAGNodeInit(name, op, last)                                            \
+    do {                                                                       \
+        va_list last##ancestors;                                               \
+        va_start(last##ancestors, last);                                       \
+        init_node(&(name),                                                     \
+                  sizeof(name##_ancestor) / sizeof(name##_ancestor[0]), (op),  \
+                  &(last##ancestors));                                         \
+    } while (0)
 
 #define for_each_child(self, child)                                            \
     for (struct DAGNode *child = self->children; child;                        \
@@ -32,11 +38,10 @@ struct DAGop {
 };
 
 void init_node(struct DAGNode *node, unsigned int ancestor_amount,
-               struct DAGop *op);
+               struct DAGop *op, va_list *ancestors);
 
 void print_dag(struct DAGNode *root);
 
-bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor);
 bool has_ancestor(struct DAGNode *self);
 bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child);
 struct DAGNode *next_child(struct DAGNode *self, struct DAGNode *current_child);

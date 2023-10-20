@@ -18,7 +18,7 @@ static void add_child(struct DAGNode *self, struct DAGNode *child) {
     }
 }
 
-bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
+static bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
     if (!self)
         return false;
     if (self->ancestor_count >= self->ancestor_amount) {
@@ -47,12 +47,17 @@ bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child) {
 }
 
 void init_node(struct DAGNode *node, unsigned int ancestor_amount,
-               struct DAGop *op) {
+               struct DAGop *op, va_list *ancestors) {
     node->ancestor_amount = ancestor_amount;
     node->ancestor_count = 0;
     node->op = op;
     node->children = NULL;
     node->sibling = NULL;
+
+    struct DAGNode *ancestor;
+    while ((ancestor = va_arg(*ancestors, struct DAGNode *)) != NULL) {
+        add_ancestor(node, ancestor);
+    }
 }
 
 static void print_dag_inner(struct DAGNode *root) {
