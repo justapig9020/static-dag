@@ -25,6 +25,10 @@
     for (struct DAGNode *child = (self)->children; child;                      \
          child = next_child(self, child))
 
+#define for_each_child_pointer(self, child)                                    \
+    for (struct DAGNode **child = &(self)->children; *child;                   \
+         child = next_child_pointer(self, child))
+
 struct DAGNode {
     struct DAGop *op;
     struct DAGNode *children;
@@ -37,6 +41,7 @@ struct DAGNode {
 struct DAGop {
     void (*free)(struct DAGNode *self);
     void (*print)(struct DAGNode *self);
+    void (*on_all_anecestors_freed)(struct DAGNode *self);
 };
 
 bool init_node(struct DAGNode *self, unsigned int ancestor_amount,
@@ -46,5 +51,7 @@ bool remove_node(struct DAGNode *self);
 bool has_ancestor(struct DAGNode *self);
 bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child);
 unsigned int ancestor_count(struct DAGNode *self);
+struct DAGNode **next_child_pointer(struct DAGNode *self,
+                                    struct DAGNode **current_child);
 struct DAGNode *next_child(struct DAGNode *self, struct DAGNode *current_child);
 void print_node(struct DAGNode *self);

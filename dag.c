@@ -96,11 +96,37 @@ bool remove_node(struct DAGNode *self) {
     if (!self || has_ancestor(self))
         return false;
 
-    for_each_child(self, child) { remove_ancestor(child, self); }
+    for_each_child(self, child) {
+        remove_ancestor(child, self);
+        if (!has_ancestor(child)) {
+            if (child->op->on_all_anecestors_freed)
+                child->op->on_all_anecestors_freed(child);
+        }
+    }
+
+    for_each_child_pointer(self, child) {
+        if (!has_ancestor(*child)) {
+            struct DAGNode *tmp = *child;
+            *child = (*child)->sibling;
+            tmp->sibling = NULL;
+        }
+    }
 
     if (self->op->free)
         self->op->free(self);
     return true;
+}
+
+struct DAGNode **next_child_pointer(struct DAGNode *self,
+                                    struct DAGNode **current_child) {
+    if (!self || !current_child)
+        return NULL;
+    while (*current_child) {
+        current_child = &(*current_child)->sibling;
+        if (is_ancestor_of(self, *current_child))
+            return current_child;
+    }
+    return current_child;
 }
 
 struct DAGNode *next_child(struct DAGNode *self,
