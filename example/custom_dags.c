@@ -78,8 +78,17 @@ void free_snode(struct DAGNode *n) {
     chunk->allocated = false;
 }
 
-static struct DAGop vnode_op = {.free = free_vnode, .print = vnode_print};
-static struct DAGop snode_op = {.free = free_snode, .print = snode_print};
+void all_ancestors_freed(struct DAGNode *n) {
+    print_node(n);
+    debug("all ancestors freed\n");
+}
+
+static struct DAGop vnode_op = {.free = free_vnode,
+                                .print = vnode_print,
+                                .on_all_anecestors_freed = all_ancestors_freed};
+static struct DAGop snode_op = {.free = free_snode,
+                                .print = snode_print,
+                                .on_all_anecestors_freed = all_ancestors_freed};
 
 static void print_vnode(struct VNode *vnode) {
     struct DAGNode *node = &vnode->node;
