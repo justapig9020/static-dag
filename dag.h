@@ -7,6 +7,7 @@
 #define container_of(ptr, type, member)                                        \
     ((type *)((char *)(ptr)-offsetof(type, member)))
 
+// TODO: Maybe the structure should declare as __packed__?
 #define DAGNode(name, ancestor_count)                                          \
     struct DAGNode name;                                                       \
     struct DAGNode *name##_ancestor[ancestor_count];
