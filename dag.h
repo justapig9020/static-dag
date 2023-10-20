@@ -10,13 +10,16 @@
     struct DAGNode name;                                                       \
     struct DAGNode *name##_ancestor[ancestor_count];
 
-#define DAGNodeInit(name, print_func)                                          \
-    init_node(&name, sizeof(name##_ancestor) / sizeof(name##_ancestor[0]),     \
-              print_func);
+#define DAGNodeInit(name, op)                                                  \
+    init_node(&(name), sizeof(name##_ancestor) / sizeof(name##_ancestor[0]),   \
+              (op));
+
+#define for_each_child(self, child)                                            \
+    for (struct DAGNode *child = self->children; child;                        \
+         child = next_child(self, child))
 
 struct DAGNode {
-    const struct DAGop *op;
-    void (*print)(struct DAGNode *node);
+    struct DAGop *op;
     struct DAGNode *children;
     struct DAGNode *sibling;
     unsigned int ancestor_amount;
@@ -25,11 +28,15 @@ struct DAGNode {
 };
 
 struct DAGop {
-    bool (*add_ancestor)(struct DAGNode *self, struct DAGNode *ancestor);
-    bool (*release_ancestor)(struct DAGNode *self, struct DAGNode *ancestor);
+    void (*print)(struct DAGNode *node);
 };
 
 void init_node(struct DAGNode *node, unsigned int ancestor_amount,
-               void (*print_func)(struct DAGNode *node));
+               struct DAGop *op);
 
-void print_dag(struct DAGNode *node);
+void print_dag(struct DAGNode *root);
+
+bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor);
+bool has_ancestor(struct DAGNode *self);
+bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child);
+struct DAGNode *next_child(struct DAGNode *self, struct DAGNode *current_child);

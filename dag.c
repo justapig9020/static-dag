@@ -1,10 +1,10 @@
 #include "dag.h"
 #include <stdio.h>
 
-const static struct DAGop default_dag_op;
+#define DEBUG
+#include "debug.h"
 
 static void add_child(struct DAGNode *self, struct DAGNode *child) {
-    printf("add child\n");
     if (!self)
         return;
     if (!self->children) {
@@ -12,12 +12,13 @@ static void add_child(struct DAGNode *self, struct DAGNode *child) {
         return;
     }
     struct DAGNode *eldest_son = self->children;
-    if (eldest_son->sibling != child)
+    if (eldest_son->sibling != child) {
+        child->sibling = eldest_son->sibling;
         eldest_son->sibling = child;
+    }
 }
 
-static bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
-    printf("add ancestor\n");
+bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
     if (!self)
         return false;
     if (self->ancestor_count >= self->ancestor_amount) {
@@ -28,32 +29,60 @@ static bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
     return true;
 }
 
+bool has_ancestor(struct DAGNode *self) {
+    if (!self)
+        return false;
+    return self->ancestor_count > 0;
+}
+
+bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child) {
+    if (!child || !self)
+        return false;
+    for (int i = 0; i < child->ancestor_count; i++) {
+        if (child->ancestor[i] == self) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void init_node(struct DAGNode *node, unsigned int ancestor_amount,
-               void (*print_func)(struct DAGNode *node)) {
+               struct DAGop *op) {
     node->ancestor_amount = ancestor_amount;
     node->ancestor_count = 0;
-    node->op = &default_dag_op;
-    node->print = print_func;
+    node->op = op;
     node->children = NULL;
     node->sibling = NULL;
-    for (int i = 0; i < ancestor_amount; i++) {
-        node->ancestor[i] = NULL;
-    }
 }
 
-void print_dag(struct DAGNode *node) {
-    if (node == NULL) {
+static void print_dag_inner(struct DAGNode *root) {
+    if (!root)
         return;
-    }
-    if (node->print != NULL)
-        node->print(node);
-    printf("Siblings:\n");
-    print_dag(node->sibling);
-    printf("children:\n");
-    print_dag(node->children);
+
+    if (root->op->print != NULL)
+        root->op->print(root);
+
+    for_each_child(root, child) print_dag_inner(child);
+    for_each_child(root, child) debug("%p --> %p;\n", root, child);
 }
 
-const static struct DAGop default_dag_op = {
-    .add_ancestor = add_ancestor,
-    .release_ancestor = NULL,
-};
+void print_dag(struct DAGNode *root) {
+    if (!root)
+        return;
+    debug("```mermaid\n");
+    debug("flowchart LR;\n");
+    print_dag_inner(root);
+    debug("```");
+}
+
+struct DAGNode *next_child(struct DAGNode *self,
+                           struct DAGNode *current_child) {
+    if (!self || !current_child)
+        return NULL;
+    while (current_child->sibling) {
+        current_child = current_child->sibling;
+        if (is_ancestor_of(self, current_child))
+            return current_child;
+    }
+    return NULL;
+}
