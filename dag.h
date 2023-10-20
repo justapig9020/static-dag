@@ -11,6 +11,7 @@
     struct DAGNode name;                                                       \
     struct DAGNode *name##_ancestor[ancestor_count];
 
+// TODO: handle "init_node" failure
 #define DAGNodeInit(name, op, last)                                            \
     do {                                                                       \
         va_list last##ancestors;                                               \
