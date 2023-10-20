@@ -1,7 +1,7 @@
 #include "dag.h"
 #include <stdio.h>
 
-#define DEBUG
+// #define DEBUG // uncomment this line to enable debug output
 #include "debug.h"
 
 static void add_child(struct DAGNode *self, struct DAGNode *new_child) {

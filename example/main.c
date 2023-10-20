@@ -1,5 +1,5 @@
 #include "custom_dags.h"
-#define DEBUG
+// #define DEBUG // uncomment this line to enable debug output
 #include "dag.h"
 #include "debug.h"
 #include <stddef.h>
