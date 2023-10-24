@@ -18,12 +18,12 @@ struct DAGFamily {
     struct DAGFamily name##_family[ancestor_count];
 
 // TODO: handle "init_node" failure
-#define DAGNodeInit(name, op, last)                                            \
+#define DAGNodeInit(name, op, num)                                             \
     do {                                                                       \
-        va_list last##ancestors;                                               \
-        va_start(last##ancestors, last);                                       \
+        va_list __ancestors;                                                   \
+        va_start(__ancestors, num);                                            \
         init_node(&(name), sizeof(name##_family) / sizeof(name##_family[0]),   \
-                  (op), &(last##ancestors));                                   \
+                  (op), num, &(__ancestors));                                  \
     } while (0)
 
 #define for_each_child_saved(self, child, saved)                               \
@@ -52,7 +52,7 @@ struct DAGop {
 };
 
 bool init_node(struct DAGNode *self, unsigned int ancestor_amount,
-               struct DAGop *op, va_list *ancestors);
+               struct DAGop *op, int num, va_list *ancestors);
 bool remove_node(struct DAGNode *self);
 
 bool has_ancestor(struct DAGNode *self);

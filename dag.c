@@ -47,9 +47,9 @@ unsigned int ancestor_count(struct DAGNode *self) {
     return self->ancestor_count;
 }
 
-static bool add_ancestors(struct DAGNode *self, va_list *ancestors) {
-    struct DAGNode *ancestor;
-    while ((ancestor = va_arg(*ancestors, struct DAGNode *)) != NULL) {
+static bool add_ancestors(struct DAGNode *self, int num, va_list *ancestors) {
+    for (int i = 0; i < num; i++) {
+        struct DAGNode *ancestor = va_arg(*ancestors, struct DAGNode *);
         bool success = add_ancestor(self, ancestor);
         if (!success)
             // TODO: clean up added ancestors
@@ -59,7 +59,7 @@ static bool add_ancestors(struct DAGNode *self, va_list *ancestors) {
 }
 
 bool init_node(struct DAGNode *self, unsigned int ancestor_amount,
-               struct DAGop *op, va_list *ancestors) {
+               struct DAGop *op, int num, va_list *ancestors) {
 
     self->ancestor_amount = ancestor_amount;
     self->ancestor_count = 0;
@@ -70,7 +70,7 @@ bool init_node(struct DAGNode *self, unsigned int ancestor_amount,
         self->family[i].ancestor = NULL;
         self->family[i].sybling = NULL;
     }
-    return add_ancestors(self, ancestors);
+    return add_ancestors(self, num, ancestors);
 }
 
 static void remove_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {

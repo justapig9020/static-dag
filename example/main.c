@@ -7,14 +7,14 @@
 int main(void) {
     struct DAGNode *a, *b, *c, *d, *ab, *cd, *bc, *ad;
 
-    a = as_node(new_snode("a"));
-    b = as_node(new_snode("b"));
-    c = as_node(new_snode("c"));
-    d = as_node(new_snode("d"));
-    ab = as_node(new_snode("ab", a, b, NULL));
-    cd = as_node(new_snode("cd", c, d, NULL));
-    bc = as_node(new_snode("bc", b, c, NULL));
-    ad = as_node(new_snode("ad", a, d, NULL));
+    a = as_node(new_snode("a", 0));
+    b = as_node(new_snode("b", 0));
+    c = as_node(new_snode("c", 0));
+    d = as_node(new_snode("d", 0));
+    ab = as_node(new_snode("ab", 2, a, b));
+    cd = as_node(new_snode("cd", 2, c, d));
+    bc = as_node(new_snode("bc", 2, b, c));
+    ad = as_node(new_snode("ad", 2, a, d));
 
     print_dag();
 

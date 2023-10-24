@@ -36,7 +36,7 @@ static void vnode_print(struct DAGNode *n) {
     debug("%p[\"%d\"];\n", n, vnode->data);
 }
 
-struct VNode *new_vnode(int data, ...) {
+struct VNode *new_vnode(int data, int n, ...) {
     int i;
     for (i = 0; i < VNODE_AMOUNT; i++) {
         if (!vnode_pool[i].allocated) {
@@ -44,14 +44,14 @@ struct VNode *new_vnode(int data, ...) {
             vnode_pool[i].allocated = true;
             vnode->data = data;
 
-            DAGNodeInit(vnode->node, &vnode_op, data);
+            DAGNodeInit(vnode->node, &vnode_op, n);
             return vnode;
         }
     }
     return NULL;
 }
 
-struct SNode *new_snode(char *name, ...) {
+struct SNode *new_snode(char *name, int n, ...) {
     int i;
     for (i = 0; i < SNODE_AMOUNT; i++) {
         if (!snode_pool[i].allocated) {
@@ -59,7 +59,7 @@ struct SNode *new_snode(char *name, ...) {
             snode_pool[i].allocated = true;
             snode->name = name;
 
-            DAGNodeInit(snode->node, &snode_op, name);
+            DAGNodeInit(snode->node, &snode_op, n);
             return snode;
         }
     }
