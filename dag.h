@@ -7,21 +7,28 @@
 #define container_of(ptr, type, member)                                        \
     ((type *)((char *)(ptr)-offsetof(type, member)))
 
+struct DAGFamily {
+    struct DAGNode *ancestor;
+    struct DAGNode *sybling;
+};
+
 // TODO: Maybe the structure should declare as __packed__?
 #define DAGNode(name, ancestor_count)                                          \
     struct DAGNode name;                                                       \
-    struct DAGNode *name##_ancestor[ancestor_count];
+    struct DAGFamily name##_family[ancestor_count];
 
 // TODO: handle "init_node" failure
 #define DAGNodeInit(name, op, last)                                            \
     do {                                                                       \
         va_list last##ancestors;                                               \
         va_start(last##ancestors, last);                                       \
-        init_node(&(name),                                                     \
-                  sizeof(name##_ancestor) / sizeof(name##_ancestor[0]), (op),  \
-                  &(last##ancestors));                                         \
+        init_node(&(name), sizeof(name##_family) / sizeof(name##_family[0]),   \
+                  (op), &(last##ancestors));                                   \
     } while (0)
 
+#define for_each_child_saved(self, child, saved)                               \
+    for (struct DAGNode *child = (self)->children, *saved = (self)->children;  \
+         child; child = next_child(self, child), saved = (self)->children)
 #define for_each_child(self, child)                                            \
     for (struct DAGNode *child = (self)->children; child;                      \
          child = next_child(self, child))
@@ -33,10 +40,9 @@
 struct DAGNode {
     struct DAGop *op;
     struct DAGNode *children;
-    struct DAGNode *sibling;
     unsigned int ancestor_amount;
     unsigned int ancestor_count;
-    struct DAGNode *ancestor[0];
+    struct DAGFamily family[0];
 };
 
 struct DAGop {

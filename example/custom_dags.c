@@ -79,8 +79,8 @@ void free_snode(struct DAGNode *n) {
 }
 
 void all_ancestors_freed(struct DAGNode *n) {
+    debug("All ancestors freed: ");
     print_node(n);
-    debug("all ancestors freed\n");
 }
 
 static struct DAGop vnode_op = {.free = free_vnode,
@@ -100,6 +100,11 @@ static void print_snode(struct SNode *snode) {
     struct DAGNode *node = &snode->node;
     debug("%p[\"%s: %d\"];\n", node, snode->name, ancestor_count(node));
     for_each_child(node, child) { debug("%p --> %p;\n", node, child); }
+    for (int i = 0; i < node->ancestor_amount; i++) {
+        if (node->family[i].ancestor) {
+            debug("%p -.-> %p;\n", node, node->family[i].sybling);
+        }
+    }
 }
 
 void print_dag() {
@@ -116,4 +121,5 @@ void print_dag() {
         }
     }
     debug("```\n");
+    debug("---\n");
 }
