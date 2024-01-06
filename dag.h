@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#define sizeof_dag_node(node) (sizeof(node) + sizeof(struct DAGFamily) * (node).ancestor_amount)
 #define container_of(ptr, type, member)                                        \
     ((type *)((char *)(ptr)-offsetof(type, member)))
 
