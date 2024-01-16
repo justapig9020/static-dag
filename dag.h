@@ -32,6 +32,7 @@ struct DAGFamily {
 #define for_each_child_saved(self, child, saved)                               \
   for (struct DAGNode *child = (self)->children, *saved = (self)->children;    \
        child; child = next_child(self, child), saved = (self)->children)
+
 #define for_each_child(self, child)                                            \
   for (struct DAGNode *child = (self)->children; child;                        \
        child = next_child(self, child))

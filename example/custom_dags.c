@@ -1,4 +1,5 @@
 #include "custom_dags.h"
+#include "dag.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,15 +29,16 @@ static struct DAGop snode_op;
 
 static void snode_print(struct DAGNode *n) {
   struct SNode *snode = container_of(n, struct SNode, node);
-  debug("%p[\"%s\"];\n", n, snode->name);
+  debug("%p[\"%s\"];\n\n", n, snode->name);
 }
 
 static void vnode_print(struct DAGNode *n) {
   struct VNode *vnode = container_of(n, struct VNode, node);
-  debug("%p[\"%d\"];\n", n, vnode->data);
+  debug("%p[\"%d\"];\n\n", n, vnode->data);
 }
 
-struct VNode *new_vnode(int data, int n, ...) {
+struct VNode *new_vnode(int data, struct DAGNode *ancestor1,
+                        struct DAGNode *ancestor2) {
   int i;
   for (i = 0; i < VNODE_AMOUNT; i++) {
     if (!vnode_pool[i].allocated) {
@@ -44,14 +46,17 @@ struct VNode *new_vnode(int data, int n, ...) {
       vnode_pool[i].allocated = true;
       vnode->data = data;
 
-      DAGNodeInit(vnode->node, &vnode_op, n);
+      DAGNodeInit(vnode->node, &vnode_op);
+      add_ancestor(&vnode->node, ancestor1);
+      add_ancestor(&vnode->node, ancestor2);
       return vnode;
     }
   }
   return NULL;
 }
 
-struct SNode *new_snode(char *name, int n, ...) {
+struct SNode *new_snode(char *name, struct DAGNode *ancestor1,
+                        struct DAGNode *ancestor2, struct DAGNode *ancestor3) {
   int i;
   for (i = 0; i < SNODE_AMOUNT; i++) {
     if (!snode_pool[i].allocated) {
@@ -59,7 +64,10 @@ struct SNode *new_snode(char *name, int n, ...) {
       snode_pool[i].allocated = true;
       snode->name = name;
 
-      DAGNodeInit(snode->node, &snode_op, n);
+      DAGNodeInit(snode->node, &snode_op);
+      add_ancestor(&snode->node, ancestor1);
+      add_ancestor(&snode->node, ancestor2);
+      add_ancestor(&snode->node, ancestor3);
       return snode;
     }
   }
@@ -100,11 +108,6 @@ static void print_snode(struct SNode *snode) {
   struct DAGNode *node = &snode->node;
   debug("%p[\"%s: %d\"];\n", node, snode->name, ancestor_count(node));
   for_each_child(node, child) { debug("%p --> %p;\n", node, child); }
-  for (int i = 0; i < node->ancestor_amount; i++) {
-    if (node->family[i].ancestor) {
-      debug("%p -.-> %p;\n", node, node->family[i].sybling);
-    }
-  }
 }
 
 void print_dag() {

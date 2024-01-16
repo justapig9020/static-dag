@@ -4,13 +4,30 @@
 // #define DEBUG // uncomment this line to enable debug output
 #include "debug.h"
 
+static int get_ancestor_index(struct DAGNode *self, struct DAGNode *ancestor) {
+  if (!self)
+    return -1;
+  for (int i = 0; i < self->ancestor_amount; i++) {
+    if (self->family[i].ancestor == ancestor)
+      return i;
+  }
+  return -1;
+}
+
 bool add_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
   if (!self)
     return false;
+  if (!ancestor)
+    return true;
   if (self->ancestor_count >= self->ancestor_amount) {
     return false;
   }
-  unsigned int index = self->ancestor_count;
+  // check if ancestor is already added
+  for (int i = 0; i < self->ancestor_count; i++) {
+    if (self->family[i].ancestor == ancestor)
+      return true;
+  }
+  int index = self->ancestor_count;
   self->family[index].ancestor = ancestor;
   self->family[index].sybling = ancestor->children;
   self->ancestor_count += 1;
@@ -22,17 +39,6 @@ bool has_ancestor(struct DAGNode *self) {
   if (!self)
     return false;
   return self->ancestor_count > 0;
-}
-
-static int get_ancestor_index(struct DAGNode *self, struct DAGNode *ancestor) {
-  if (!self)
-    return -1;
-  for (int i = 0; i < self->ancestor_amount; i++) {
-    if (self->family[i].ancestor == ancestor) {
-      return i;
-    }
-  }
-  return -1;
 }
 
 bool is_ancestor_of(struct DAGNode *self, struct DAGNode *child) {
@@ -76,8 +82,10 @@ static void remove_ancestor(struct DAGNode *self, struct DAGNode *ancestor) {
   if (!self)
     return;
   int index = get_ancestor_index(self, ancestor);
-  if (index < 0)
+  if (index < 0) {
+    debug("Ancestor not found\n");
     return;
+  }
   self->ancestor_count -= 1;
   self->family[index].ancestor = NULL;
 }
