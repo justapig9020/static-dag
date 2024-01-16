@@ -1,13 +1,13 @@
 #include "dag.h"
 
 struct VNode {
-    int data;
-    DAGNode(node, 2);
+  int data;
+  DAGNode(node, 2);
 };
 
 struct SNode {
-    char *name;
-    DAGNode(node, 3);
+  char *name;
+  DAGNode(node, 3);
 };
 
 #define as_node(self) ((struct DAGNode *)(&self->node))
